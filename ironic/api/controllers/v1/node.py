@@ -1872,7 +1872,11 @@ class NodesController(rest.RestController):
             of the resource to be returned.
         """
         cdict = pecan.request.context.to_policy_values()
-        policy.authorize('baremetal:node:get', cdict, cdict)
+        rpc_node = api_utils.get_rpc_node_with_suffix(node_ident)
+        target = dict(cdict, node=rpc_node.as_dict())
+        LOG.debug("Testing get_one target: ")
+        LOG.debug(target)
+        policy.authorize('baremetal:node:get', target, cdict)
 
         if self.from_chassis:
             raise exception.OperationNotPermitted()
@@ -1880,7 +1884,6 @@ class NodesController(rest.RestController):
         api_utils.check_allow_specify_fields(fields)
         api_utils.check_allowed_fields(fields)
 
-        rpc_node = api_utils.get_rpc_node_with_suffix(node_ident)
         return Node.convert_with_links(rpc_node, fields=fields)
 
     @METRICS.timer('NodesController.post')
